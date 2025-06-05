@@ -1,1 +1,6 @@
 rootProject.name = 'api-social-network'
+
+// Java/Spring Boot Microservices
+include 'user-management'
+include 'post-service'
+include 'notification-service'

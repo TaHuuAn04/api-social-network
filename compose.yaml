@@ -1,24 +1,61 @@
 services:
-  mongodb:
-    image: 'mongo:latest'
+  # User Service DB
+  user-db:
+    image: postgres:15
+    container_name: ${USER_DB_CONTAINER:-user-postgres}
+    ports:
+      - "${DB_PORT:-5432}:5432"
     environment:
-      - 'MONGO_INITDB_DATABASE=mydatabase'
-      - 'MONGO_INITDB_ROOT_PASSWORD=secret'
-      - 'MONGO_INITDB_ROOT_USERNAME=root'
+      - POSTGRES_DB=${POSTGRES_DB:-social_network}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-password}
+    volumes:
+      - user_db_data:/var/lib/postgresql/data
+    networks:
+      - microservices-network
+
+  # Redis Cache
+  redis-cache:
+    image: redis:7.0-alpine
+    container_name: ${REDIS_CONTAINER:-redis-cache}
     ports:
-      - '27017'
-  ollama:
-    image: 'ollama/ollama:latest'
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - microservices-network
+
+  # Zookeeper
+  zookeeper:
+    image: wurstmeister/zookeeper:latest
+    container_name: ${ZOOKEEPER_CONTAINER:-zookeeper}
     ports:
-      - '11434'
-  rabbitmq:
-    image: 'rabbitmq:latest'
+      - "${ZOOKEEPER_PORT:-2181}:2181"
+    networks:
+      - microservices-network
+
+  # Kafka
+  kafka:
+    image: wurstmeister/kafka:latest
+    container_name: ${KAFKA_CONTAINER:-kafka-broker}
+    ports:
+      - "${KAFKA_PORT:-9092}:9092"
     environment:
-      - 'RABBITMQ_DEFAULT_PASS=secret'
-      - 'RABBITMQ_DEFAULT_USER=myuser'
-    ports:
-      - '5672'
-  redis:
-    image: 'redis:latest'
-    ports:
-      - '6379'
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://kafka:29092,OUTSIDE://localhost:${KAFKA_PORT:-9092}
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
+      KAFKA_LISTENERS: INSIDE://0.0.0.0:29092,OUTSIDE://0.0.0.0:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+    depends_on:
+      - zookeeper
+    networks:
+      - microservices-network
+
+
+volumes:
+  user_db_data:
+  redis_data:
+
+networks:
+  microservices-network:
+    driver: bridge
