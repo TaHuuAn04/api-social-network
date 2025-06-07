@@ -2,5 +2,10 @@ rootProject.name = 'api-social-network'
 
 // Java/Spring Boot Microservices
 include 'user-management'
+project(':user-management').projectDir = new File('apps/user-management')
+
 include 'post-service'
+project(':post-service').projectDir = new File('apps/post-service')
+
 include 'notification-service'
+project(':notification-service').projectDir = new File('apps/notification-service')

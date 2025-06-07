@@ -83,7 +83,6 @@ public class DatabaseConfig {
         properties.put("hibernate.format_sql", true);
         properties.put("hibernate.use_sql_comments", true);
 
-        // Custom naming strategy tương tự như NestJS
         properties.put(
                 "hibernate.physical_naming_strategy",
                 "com.example.usermanagement.config.CustomNamingStrategy");
